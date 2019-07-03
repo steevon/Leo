@@ -5,6 +5,15 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="1.0.24" />
+    <PackageReference Include="Microsoft.Azure.ServiceBus" Version="3.4.0" />
+    <PackageReference Include="Microsoft.Azure.WebJobs.Extensions.ServiceBus" Version="3.0.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Remove="obj\Release\netcoreapp2.1\PubTmp\Out\bin\Microsoft.AspNetCore.Http.Extensions.dll" />
+    <None Remove="obj\Release\netcoreapp2.1\PubTmp\Out\bin\Microsoft.Net.Http.Headers.dll" />
+    <None Remove="obj\Release\netcoreapp2.1\PubTmp\Out\bin\Microsoft.WindowsAzure.Storage.dll" />
+    <None Remove="obj\Release\netcoreapp2.1\PubTmp\Out\bin\Newtonsoft.Json.dll" />
+    <None Remove="obj\Release\netcoreapp2.1\PubTmp\Out\bin\runtimes\win\lib\netstandard1.3\System.Text.Encoding.CodePages.dll" />
   </ItemGroup>
   <ItemGroup>
     <None Update="host.json">
