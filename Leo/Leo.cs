@@ -16,6 +16,7 @@ using Microsoft.Azure.ServiceBus;
 
 namespace Leo
 {
+
     public static class Leo
     {
         [FunctionName("Leo")]
@@ -36,5 +37,31 @@ namespace Leo
                 : new BadRequestObjectResult("Please pass a name on the query string or in the request body");
         }
 
+        public static string GetStringResponse(string url, ILogger log)
+        {
+            WebRequest request = WebRequest.Create(url);
+            WebResponse response = request.GetResponse();
+            log.LogDebug(((HttpWebResponse)response).StatusDescription);
+            string responseString;
+            // Get the stream containing content returned by the server. 
+            // The using block ensures the stream is automatically closed. 
+            using (Stream dataStream = response.GetResponseStream())
+            {
+                // Open the stream using a StreamReader for easy access.  
+                StreamReader reader = new StreamReader(dataStream);
+                // Read the content.  
+                responseString = reader.ReadToEnd();
+            }
+            // Close the response.  
+            response.Close();
+            return responseString;
+        }
+
+        public static HttpWebResponse GetHttpResponse(string url)
+        {
+            WebRequest request = WebRequest.Create(url);
+            WebResponse response = request.GetResponse();
+            return (HttpWebResponse)response;
+        }
     }
 }
