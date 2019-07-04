@@ -10,6 +10,7 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Leo
 {
@@ -36,6 +37,28 @@ namespace Leo
                 : new BadRequestObjectResult("Please pass a name on the query string or in the request body");
         }
 
+        public static HttpWebResponse GetHttpResponse(ILogger log, string url, int retry = 0)
+        {
+            int count = 0;
+            HttpWebResponse httpResponse;
+            do
+            {
+                // Wait 200ms before retry.
+                if (count > 0)
+                {
+                    System.Threading.Thread.Sleep(500 * count);
+                    log.LogInformation($"Retrying...{count}");
+                }
+                WebRequest request = WebRequest.Create(url);
+                WebResponse response = request.GetResponse();
+                httpResponse = (HttpWebResponse)response;
+                count += 1;
+                log.LogInformation($"HTTP Reponse: {httpResponse.StatusDescription}");
+            }
+            while (count <= retry && httpResponse.StatusCode != HttpStatusCode.OK);
+            return httpResponse;
+        }
+
         public static string GetStringResponse(ILogger log, string url, int retry = 0)
         {
 
@@ -55,34 +78,19 @@ namespace Leo
             return responseString;
         }
 
-        public static HttpWebResponse GetHttpResponse(ILogger log, string url, int retry = 0)
+        public static dynamic GetJSONResponse(ILogger log, string url, int retry = 0)
         {
-            int count = 0;
-            HttpWebResponse httpResponse;
-            do
-            {
-                // Wait 200ms before retry.
-                if (count > 0)
-                {
-                    System.Threading.Thread.Sleep(200);
-                    log.LogInformation($"Retrying...{count}");
-                }
-                WebRequest request = WebRequest.Create(url);
-                WebResponse response = request.GetResponse();
-                httpResponse = (HttpWebResponse)response;
-                count += 1;
-                log.LogInformation($"HTTP Reponse: {httpResponse.StatusDescription}");
-            }
-            while (count <= retry && httpResponse.StatusCode != HttpStatusCode.OK);
-            return httpResponse;
+            string responseString = GetStringResponse(log, url, retry);
+            return JsonConvert.DeserializeObject(responseString);
         }
 
-        public static async Task SendMessageAsync(ILogger log, string queueName, string messageText, int delaySeconds = 0)
+        public static async Task<DateTime?> SendMessageAsync(ILogger log, string queueName, string messageText, int delaySeconds = 0)
         {
             // Send Message to Service Bus
             string ServiceBusConnectionString = Environment.GetEnvironmentVariable("ServiceBusConnectionString");
             IQueueClient queueClient = new QueueClient(ServiceBusConnectionString, queueName);
-            log.LogInformation($"{DateTime.Now} :: Sending message: {messageText}");
+            log.LogInformation($"Sending message: {messageText}");
+            DateTime? messageEnqueueTime = null;
             try
             {
                 // Create a new message to send to the queue
@@ -91,12 +99,31 @@ namespace Leo
 
                 // Send the message to the queue
                 await queueClient.SendAsync(message);
+                messageEnqueueTime = message.ScheduledEnqueueTimeUtc;
             }
             catch (Exception exception)
             {
-                log.LogError($"{DateTime.Now} :: Exception: {exception.Message}");
+                log.LogError($"Exception: {exception.Message}");
             }
             await queueClient.CloseAsync();
+            return messageEnqueueTime;
+        }
+
+        public static bool AtNight(ILogger log)
+        {
+            dynamic dict = GetJSONResponse(log, "https://api.sunrise-sunset.org/json?lat=36.065364&lng=-79.516018&formatted=0", 3);
+            JObject results = dict["results"];
+            DateTime sunrise = Convert.ToDateTime(results["sunrise"]);
+            log.LogInformation($"Sunrise time is {sunrise}.");
+            DateTime sunset = Convert.ToDateTime(results["sunset"]);
+            log.LogInformation($"Sunset time is {sunset}.");
+            DateTime now = DateTime.Now;
+            log.LogInformation($"Current time is {now}.");
+            if (now > sunrise && now < sunset)
+            {
+                return false;
+            }
+            return true;
         }
     }
 }
