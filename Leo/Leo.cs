@@ -37,11 +37,10 @@ namespace Leo
                 : new BadRequestObjectResult("Please pass a name on the query string or in the request body");
         }
 
-        public static string GetStringResponse(string url, ILogger log)
+        public static string GetStringResponse(string url, ILogger log, int retry = 0)
         {
-            WebRequest request = WebRequest.Create(url);
-            WebResponse response = request.GetResponse();
-            log.LogDebug(((HttpWebResponse)response).StatusDescription);
+
+            HttpWebResponse response = GetHttpResponse(url, log, retry);
             string responseString;
             // Get the stream containing content returned by the server. 
             // The using block ensures the stream is automatically closed. 
@@ -57,11 +56,26 @@ namespace Leo
             return responseString;
         }
 
-        public static HttpWebResponse GetHttpResponse(string url)
+        public static HttpWebResponse GetHttpResponse(string url, ILogger log, int retry = 0)
         {
-            WebRequest request = WebRequest.Create(url);
-            WebResponse response = request.GetResponse();
-            return (HttpWebResponse)response;
+            int count = 0;
+            HttpWebResponse httpResponse;
+            do
+            {
+                // Wait 200ms before retry.
+                if (count > 0)
+                {
+                    System.Threading.Thread.Sleep(200);
+                    log.LogInformation($"Retrying...{count}");
+                }
+                WebRequest request = WebRequest.Create(url);
+                WebResponse response = request.GetResponse();
+                httpResponse = (HttpWebResponse)response;
+                count += 1;
+                log.LogInformation(httpResponse.StatusDescription);
+            }
+            while (count <= retry && httpResponse.StatusCode != HttpStatusCode.OK);
+            return httpResponse;
         }
     }
 }
