@@ -1,26 +1,21 @@
 using System;
-using System.Net;
-using System.Collections.Specialized;
 using System.IO;
+using System.Net;
+using System.Text;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Azure.ServiceBus;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using System.Text;
-using System.Collections.Generic;
-using System.Net.Http;
-using Microsoft.Azure.ServiceBus;
 
 namespace Leo
 {
 
     public static class Leo
     {
-        const string deviceOffQueueName = "turn_off_device";
-
         [FunctionName("Leo")]
         public static async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req,
@@ -100,17 +95,6 @@ namespace Leo
                 log.LogError($"{DateTime.Now} :: Exception: {exception.Message}");
             }
             await queueClient.CloseAsync();
-        }
-
-        public static async Task ScheduleOff(ILogger log, string senderName, string deviceName, int seconds)
-        {
-            Dictionary<string, string> dict = new Dictionary<string, string>()
-            {
-                { "sender", senderName },
-                { "device", deviceName },
-            };
-            string messageText = JsonConvert.SerializeObject(dict);
-            await SendMessageAsync(log, deviceOffQueueName, messageText, seconds);
         }
     }
 }
