@@ -33,8 +33,9 @@ namespace Leo
             name = name ?? data?.name;
 
             // Ring Chime
-            Leo.GetHttpResponse(Environment.GetEnvironmentVariable("ChimeOn"), log, 3);
-            await Leo.ScheduleOff(QueueName, name, RingDuration, log);
+            Leo.GetHttpResponse(log, Environment.GetEnvironmentVariable("ChimeOn"), 3);
+            // Schedule it to be turned off
+            await Leo.ScheduleOff(log, name, "Chime", RingDuration);
 
             // Return the response
             return name != null

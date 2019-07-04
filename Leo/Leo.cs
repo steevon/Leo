@@ -19,6 +19,8 @@ namespace Leo
 
     public static class Leo
     {
+        const string deviceOffQueueName = "turn_off_device";
+
         [FunctionName("Leo")]
         public static async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req,
@@ -37,10 +39,10 @@ namespace Leo
                 : new BadRequestObjectResult("Please pass a name on the query string or in the request body");
         }
 
-        public static string GetStringResponse(string url, ILogger log, int retry = 0)
+        public static string GetStringResponse(ILogger log, string url, int retry = 0)
         {
 
-            HttpWebResponse response = GetHttpResponse(url, log, retry);
+            HttpWebResponse response = GetHttpResponse(log, url, retry);
             string responseString;
             // Get the stream containing content returned by the server. 
             // The using block ensures the stream is automatically closed. 
@@ -56,7 +58,7 @@ namespace Leo
             return responseString;
         }
 
-        public static HttpWebResponse GetHttpResponse(string url, ILogger log, int retry = 0)
+        public static HttpWebResponse GetHttpResponse(ILogger log, string url, int retry = 0)
         {
             int count = 0;
             HttpWebResponse httpResponse;
@@ -78,16 +80,20 @@ namespace Leo
             return httpResponse;
         }
 
-        static IQueueClient queueClient;
-        public static async Task ScheduleOff(string queueName, string message, int seconds, ILogger log)
+        public static async Task SendMessageAsync(ILogger log, string queueName, string messageText, int delaySeconds = 0)
         {
             // Send Message to Service Bus
             string ServiceBusConnectionString = Environment.GetEnvironmentVariable("ServiceBusConnectionString");
-            queueClient = new QueueClient(ServiceBusConnectionString, queueName);
-            log.LogInformation($"{DateTime.Now} :: Sending message: {message}");
+            IQueueClient queueClient = new QueueClient(ServiceBusConnectionString, queueName);
+            log.LogInformation($"{DateTime.Now} :: Sending message: {messageText}");
             try
             {
-                await SendMessagesAsync(message, seconds);
+                // Create a new message to send to the queue
+                var message = new Message(Encoding.UTF8.GetBytes(messageText));
+                message.ScheduledEnqueueTimeUtc = DateTime.UtcNow.AddSeconds(delaySeconds);
+
+                // Send the message to the queue
+                await queueClient.SendAsync(message);
             }
             catch (Exception exception)
             {
@@ -96,14 +102,15 @@ namespace Leo
             await queueClient.CloseAsync();
         }
 
-        static async Task SendMessagesAsync(string messageBody, int delaySeconds)
+        public static async Task ScheduleOff(ILogger log, string senderName, string deviceName, int seconds)
         {
-            // Create a new message to send to the queue
-            var message = new Message(Encoding.UTF8.GetBytes(messageBody));
-            message.ScheduledEnqueueTimeUtc = DateTime.UtcNow.AddSeconds(delaySeconds);
-
-            // Send the message to the queue
-            await queueClient.SendAsync(message);
+            Dictionary<string, string> dict = new Dictionary<string, string>()
+            {
+                { "sender", senderName },
+                { "device", deviceName },
+            };
+            string messageText = JsonConvert.SerializeObject(dict);
+            await SendMessageAsync(log, deviceOffQueueName, messageText, seconds);
         }
     }
 }
