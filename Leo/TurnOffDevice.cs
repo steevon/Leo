@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
@@ -10,13 +9,17 @@ namespace Leo
     public static class TurnOffDevice
     {
         [FunctionName("TurnOffDevice")]
-        public static void Run([QueueTrigger("turn_off_device", Connection = "ServiceBusConnectionString")]string myQueueItem, ILogger log)
+        public static void Run([ServiceBusTrigger(Leo.turnOffDeviceQueueName, Connection = "ServiceBusConnectionString")]string myQueueItem, ILogger log)
         {
             log.LogInformation($"{DateTime.Now} :: Turn Off Device Queue trigger function processing: {myQueueItem}");
             Dictionary<string, string> dict = JsonConvert.DeserializeObject<Dictionary<string, string>>(myQueueItem);
-            string deviceName = dict["device"];
-            string envVariable = deviceName + "Off";
-            Leo.GetHttpResponse(log, Environment.GetEnvironmentVariable(envVariable), 3);
+            dict.TryGetValue("device", out string deviceName);
+            if (deviceName != null)
+            {
+                string envVariable = deviceName + "Off";
+                string deviceOffUrl = Environment.GetEnvironmentVariable(envVariable);
+                if (deviceOffUrl != null) Leo.GetHttpResponse(log, deviceOffUrl, 3);
+            }
         }
     }
 }

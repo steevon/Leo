@@ -16,6 +16,8 @@ namespace Leo
 
     public static class Leo
     {
+        public const string turnOffDeviceQueueName = "turn-off-device";
+
         [FunctionName("Leo")]
         public static async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req,
