@@ -72,10 +72,38 @@ namespace Leo
                 WebResponse response = request.GetResponse();
                 httpResponse = (HttpWebResponse)response;
                 count += 1;
-                log.LogInformation(httpResponse.StatusDescription);
+                log.LogInformation($"HTTP Reponse: {httpResponse.StatusDescription}");
             }
             while (count <= retry && httpResponse.StatusCode != HttpStatusCode.OK);
             return httpResponse;
+        }
+
+        static IQueueClient queueClient;
+        public static async Task ScheduleOff(string queueName, string message, int seconds, ILogger log)
+        {
+            // Send Message to Service Bus
+            string ServiceBusConnectionString = Environment.GetEnvironmentVariable("ServiceBusConnectionString");
+            queueClient = new QueueClient(ServiceBusConnectionString, queueName);
+            log.LogInformation($"{DateTime.Now} :: Sending message: {message}");
+            try
+            {
+                await SendMessagesAsync(message, seconds);
+            }
+            catch (Exception exception)
+            {
+                log.LogError($"{DateTime.Now} :: Exception: {exception.Message}");
+            }
+            await queueClient.CloseAsync();
+        }
+
+        static async Task SendMessagesAsync(string messageBody, int delaySeconds)
+        {
+            // Create a new message to send to the queue
+            var message = new Message(Encoding.UTF8.GetBytes(messageBody));
+            message.ScheduledEnqueueTimeUtc = DateTime.UtcNow.AddSeconds(delaySeconds);
+
+            // Send the message to the queue
+            await queueClient.SendAsync(message);
         }
     }
 }

@@ -34,37 +34,12 @@ namespace Leo
 
             // Ring Chime
             Leo.GetHttpResponse(Environment.GetEnvironmentVariable("ChimeOn"), log, 3);
-
-            // Send Message to Service Bus
-            string ServiceBusConnectionString = Environment.GetEnvironmentVariable("ServiceBusConnectionString");
-            queueClient = new QueueClient(ServiceBusConnectionString, QueueName);
-            log.LogInformation($"{DateTime.Now} :: Sending message: {name}");
-            try
-            {
-                await SendMessagesAsync(name, RingDuration);
-            }
-            catch (Exception exception)
-            {
-                log.LogError($"{DateTime.Now} :: Exception: {exception.Message}");
-            }
-            await queueClient.CloseAsync();
+            await Leo.ScheduleOff(QueueName, name, RingDuration, log);
 
             // Return the response
             return name != null
                 ? (ActionResult)new OkObjectResult($"Hello, {name}")
                 : new BadRequestObjectResult("Please pass a name on the query string or in the request body");
         }
-
-        static async Task SendMessagesAsync(string messageBody, int delaySeconds)
-        {
-            // Create a new message to send to the queue
-            var message = new Message(Encoding.UTF8.GetBytes(messageBody));
-            message.ScheduledEnqueueTimeUtc = DateTime.UtcNow.AddSeconds(delaySeconds);
-
-            // Send the message to the queue
-            await queueClient.SendAsync(message);
-        }
-
-
     }
 }
