@@ -10,6 +10,9 @@ namespace Leo
         [FunctionName("StopChime")]
         public static void Run([ServiceBusTrigger("chime", Connection = "ServiceBusConnectionString")]string myQueueItem, ILogger log)
         {
+            // Stop Chime
+            Leo.GetHttpResponse(Environment.GetEnvironmentVariable("ChimeOff"), log, 3);
+
             string log_message = $"{DateTime.Now} :: ServiceBus queue trigger function processed message: {myQueueItem}";
             log.LogInformation(log_message);
         }

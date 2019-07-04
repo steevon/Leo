@@ -15,6 +15,7 @@ namespace Leo
     public static class RingChime
     {
         const string QueueName = "chime";
+        const int RingDuration = 20;
         static IQueueClient queueClient;
 
         [FunctionName("RingChime")]
@@ -23,29 +24,32 @@ namespace Leo
             ILogger log)
         {
             
-            log.LogInformation("C# HTTP trigger function processed a request.");
+            log.LogInformation("HTTP trigger function processing RingChime request.");
 
+            // Get the name parameter
             string name = req.Query["name"];
-
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
             dynamic data = JsonConvert.DeserializeObject(requestBody);
             name = name ?? data?.name;
 
-            string ServiceBusConnectionString = Environment.GetEnvironmentVariable("ServiceBusConnectionString");
+            // Ring Chime
+            Leo.GetHttpResponse(Environment.GetEnvironmentVariable("ChimeOn"), log, 3);
 
+            // Send Message to Service Bus
+            string ServiceBusConnectionString = Environment.GetEnvironmentVariable("ServiceBusConnectionString");
             queueClient = new QueueClient(ServiceBusConnectionString, QueueName);
             log.LogInformation($"{DateTime.Now} :: Sending message: {name}");
             try
             {
-                await SendMessagesAsync(name, 10);
+                await SendMessagesAsync(name, RingDuration);
             }
             catch (Exception exception)
             {
                 log.LogError($"{DateTime.Now} :: Exception: {exception.Message}");
             }
-            
             await queueClient.CloseAsync();
 
+            // Return the response
             return name != null
                 ? (ActionResult)new OkObjectResult($"Hello, {name}")
                 : new BadRequestObjectResult("Please pass a name on the query string or in the request body");
@@ -60,5 +64,7 @@ namespace Leo
             // Send the message to the queue
             await queueClient.SendAsync(message);
         }
+
+
     }
 }
