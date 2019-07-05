@@ -94,8 +94,10 @@ namespace Leo
             try
             {
                 // Create a new message to send to the queue
-                var message = new Message(Encoding.UTF8.GetBytes(messageText));
-                message.ScheduledEnqueueTimeUtc = DateTime.UtcNow.AddSeconds(delaySeconds);
+                var message = new Message(Encoding.UTF8.GetBytes(messageText))
+                {
+                    ScheduledEnqueueTimeUtc = DateTime.UtcNow.AddSeconds(delaySeconds)
+                };
 
                 // Send the message to the queue
                 await queueClient.SendAsync(message);
@@ -111,7 +113,11 @@ namespace Leo
 
         public static bool AtNight(ILogger log)
         {
-            dynamic dict = GetJSONResponse(log, "https://api.sunrise-sunset.org/json?lat=36.065364&lng=-79.516018&formatted=0", 3);
+            // Get home coordinates from environment variable.
+            string homeCoordinates = Environment.GetEnvironmentVariable("HomeCoordinates");
+            // Use the coordinates of Liberty Island as default home coordinates.
+            if (homeCoordinates == null) homeCoordinates = "lat=40.689428&lng=-74.044529";
+            dynamic dict = GetJSONResponse(log, "https://api.sunrise-sunset.org/json?" + homeCoordinates + "&formatted=0", 3);
             JObject results = dict["results"];
             DateTime sunrise = Convert.ToDateTime(results["sunrise"]);
             log.LogInformation($"Sunrise time is {sunrise}.");

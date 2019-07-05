@@ -19,6 +19,10 @@ namespace Leo
                 string envVariable = deviceName + "Off";
                 string deviceOffUrl = Environment.GetEnvironmentVariable(envVariable);
                 if (deviceOffUrl != null) Leo.GetHttpResponse(log, deviceOffUrl, 3);
+                else log.LogError($"Trigger for turning off {deviceName} not found.");
+            } else
+            {
+                log.LogError($"\"device\" parameter not found.");
             }
         }
     }

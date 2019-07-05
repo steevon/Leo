@@ -14,6 +14,9 @@
     <None Remove="obj\Release\netcoreapp2.1\PubTmp\Out\bin\Microsoft.WindowsAzure.Storage.dll" />
     <None Remove="obj\Release\netcoreapp2.1\PubTmp\Out\bin\Newtonsoft.Json.dll" />
     <None Remove="obj\Release\netcoreapp2.1\PubTmp\Out\bin\runtimes\win\lib\netstandard1.3\System.Text.Encoding.CodePages.dll" />
+    <None Remove="obj\Release\netcoreapp2.1\PubTmp\Out\bin\Microsoft.AspNetCore.JsonPatch.dll" />
+    <None Remove="obj\Release\netcoreapp2.1\PubTmp\Out\bin\Microsoft.AspNetCore.Hosting.Server.Abstractions.dll" />
+    <None Remove="obj\Release\netcoreapp2.1\PubTmp\Out\bin\Microsoft.AspNetCore.Http.dll" />
   </ItemGroup>
   <ItemGroup>
     <None Update="host.json">
