@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
@@ -37,10 +39,11 @@ namespace Leo
                 : new BadRequestObjectResult("Please pass a name on the query string or in the request body");
         }
 
-        public static HttpWebResponse GetHttpResponse(ILogger log, string url, int retry = 0)
+        public static HttpWebResponse GetHttpResponse(ILogger log, string url, int retry = 0, Dictionary<string, string> headers=null)
         {
             int count = 0;
-            HttpWebResponse httpResponse;
+            log.LogInformation($"Getting response from {url}");
+            HttpWebResponse httpResponse = null;
             do
             {
                 // Wait 200ms before retry.
@@ -50,19 +53,36 @@ namespace Leo
                     log.LogInformation($"Retrying...{count}");
                 }
                 WebRequest request = WebRequest.Create(url);
-                WebResponse response = request.GetResponse();
-                httpResponse = (HttpWebResponse)response;
+                
+                if (headers != null)
+                {
+                    foreach(KeyValuePair<string, string> header in headers)
+                    {
+                        request.Headers.Add(header.Key, header.Value);
+                    }
+                    log.LogInformation($"Added headers {request.Headers}");
+                }
+                try
+                {
+                    WebResponse response = request.GetResponse();
+                    httpResponse = (HttpWebResponse)response;
+                    log.LogInformation($"HTTP Reponse: {httpResponse.StatusDescription}");
+                }
+                catch (WebException ex)
+                {
+                    httpResponse = (HttpWebResponse)ex.Response;
+                    log.LogInformation($"Error: {ex.Status}");
+                } 
                 count += 1;
-                log.LogInformation($"HTTP Reponse: {httpResponse.StatusDescription}");
             }
             while (count <= retry && httpResponse.StatusCode != HttpStatusCode.OK);
             return httpResponse;
         }
 
-        public static string GetStringResponse(ILogger log, string url, int retry = 0)
+        public static string GetStringResponse(ILogger log, string url, int retry = 0, Dictionary<string, string> headers = null)
         {
 
-            HttpWebResponse response = GetHttpResponse(log, url, retry);
+            HttpWebResponse response = GetHttpResponse(log, url, retry, headers);
             string responseString;
             // Get the stream containing content returned by the server. 
             // The using block ensures the stream is automatically closed. 
