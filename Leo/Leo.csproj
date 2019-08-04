@@ -7,6 +7,7 @@
     <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="1.0.24" />
     <PackageReference Include="Microsoft.Azure.ServiceBus" Version="3.4.0" />
     <PackageReference Include="Microsoft.Azure.WebJobs.Extensions.ServiceBus" Version="3.0.0" />
+    <PackageReference Include="Google.Apis.Gmail.v1" Version="1.40.2.1635" />
   </ItemGroup>
   <ItemGroup>
     <None Remove="obj\Release\netcoreapp2.1\PubTmp\Out\bin\Microsoft.AspNetCore.Http.Extensions.dll" />
