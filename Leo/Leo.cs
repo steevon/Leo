@@ -60,7 +60,7 @@ namespace Leo
                     {
                         request.Headers.Add(header.Key, header.Value);
                     }
-                    log.LogInformation($"Added headers {request.Headers}");
+                    log.LogInformation($"Added headers {request.Headers.Keys}");
                 }
                 try
                 {

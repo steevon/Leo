@@ -8,7 +8,6 @@ namespace Leo
     public class GoogleAPI
     {
         private string accessToken;
-        private string userID;
         private ILogger log;
 
         public GoogleAPI(string accessToken, ILogger log=null)
@@ -23,25 +22,62 @@ namespace Leo
             {
                 { "Authorization", $"Bearer {accessToken}" }
             };
-            url += "?";
+
             if (query != null)
             {
+                url += "?";
                 foreach (KeyValuePair<string, string> q in query)
                 {
-                    url = $"{url}&{q.Key}={q.Key}";
+                    if (q.Value != null) url = $"{url}&{q.Key}={q.Value}";
                 }
             }
 
             dynamic data_response = Leo.GetJSONResponse(log, url, headers: headers);
+            if (data_response?.error != null)
+            {
+                log.LogError($"{data_response}");
+            }
             return data_response;
         }
 
-        public dynamic GmailProfile()
+    }
+
+    public class GmailAPI : GoogleAPI
+    {
+        private string pageToken = null;
+        public Dictionary<string, string> Query { get; set; }
+
+        public GmailAPI(string accessToken, ILogger log = null) : base(accessToken, log)
         {
-            string user_id = Environment.GetEnvironmentVariable("GmailAddress");
-            string url = $"https://www.googleapis.com/gmail/v1/users/{user_id}/profile";
+        }
+
+        public dynamic Profile()
+        {
+            string url = $"https://www.googleapis.com/gmail/v1/users/me/profile";
             dynamic data_response = Request(url);
             return data_response;
+        }
+
+        public dynamic GetMessages(int maxResults=0)
+        {
+            pageToken = null;
+            return NextMessages(maxResults);
+        }
+
+        public dynamic NextMessages(int maxResults=0)
+        {
+            List<dynamic> messages = new List<dynamic>();
+            string url = $"https://www.googleapis.com/gmail/v1/users/me/messages";
+            Query["pageToken"] = pageToken != null ? pageToken : null;
+            Query["maxResults"] = maxResults != 0 ? maxResults.ToString() : null;
+            dynamic response = Request(url, Query);
+            if (response?.messages == null)
+            {
+                throw new Exception(response);
+            }
+            this.pageToken = response.nextPageToken;
+            messages.AddRange(response.messages);
+            return messages;
         }
     }
 }
