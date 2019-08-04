@@ -51,5 +51,24 @@ namespace Leo
                 $"Refresh Token: {token_response?.refresh_token}\n" +
                 $"Expires In: {token_response?.expires_in}");
         }
+
+        public static async Task<string> RefreshAccessToken(ILogger log)
+        {
+            log.LogInformation("Refreshing Access Token");
+            string clientID = Environment.GetEnvironmentVariable("GoogleClientID");
+            string clientSecret = Environment.GetEnvironmentVariable("GoogleClientSecret");
+            string refreshToken = Environment.GetEnvironmentVariable("GmailRefreshToken");
+            
+            // Get access token
+            Dictionary<string, string> data = new Dictionary<string, string>
+            {
+                { "refresh_token", refreshToken },
+                { "client_id", clientID },
+                { "client_secret", clientSecret },
+                { "grant_type", "refresh_token" }
+            };
+            dynamic token_response = await Leo.PostJSONResponse(log, "https://www.googleapis.com/oauth2/v4/token", data);
+            return token_response?.access_token;
+        }
     }
 }
