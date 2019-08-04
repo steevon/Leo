@@ -78,9 +78,18 @@ namespace Leo
             return responseString;
         }
 
-        public static dynamic GetJSONResponse(ILogger log, string url, int retry = 0)
+        public static dynamic GetJSONResponse(ILogger log, string url, int retry = 0, Dictionary<string, string> headers = null)
         {
-            string responseString = GetStringResponse(log, url, retry);
+            string responseString = GetStringResponse(log, url, retry, headers);
+            return JsonConvert.DeserializeObject(responseString);
+        }
+
+        public static async Task<dynamic> PostJSONResponse(ILogger log, string url, Dictionary<string, string> data)
+        {
+            HttpClient client = new HttpClient();
+            var content = new FormUrlEncodedContent(data);
+            HttpResponseMessage response = await client.PostAsync(url, content);
+            var responseString = await response.Content.ReadAsStringAsync();
             return JsonConvert.DeserializeObject(responseString);
         }
 
