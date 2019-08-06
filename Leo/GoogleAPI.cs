@@ -54,11 +54,11 @@ namespace Leo
         public dynamic Profile()
         {
             string url = $"https://www.googleapis.com/gmail/v1/users/me/profile";
-            dynamic data_response = Request(url);
-            return data_response;
+            dynamic response = Request(url);
+            return response;
         }
 
-        public dynamic GetMessages(int maxResults=0)
+        public dynamic ListMessages(int maxResults=0)
         {
             pageToken = null;
             return NextMessages(maxResults);
@@ -79,5 +79,14 @@ namespace Leo
             messages.AddRange(response.messages);
             return messages;
         }
+
+        public dynamic GetMessage(string messageID)
+        {
+            string url = $"https://www.googleapis.com/gmail/v1/users/me/messages/{messageID}";
+            dynamic response = Request(url);
+            return response;
+        }
+
+
     }
 }
