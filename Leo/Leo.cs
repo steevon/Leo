@@ -160,5 +160,14 @@ namespace Leo
             }
             return true;
         }
+
+        public static string MillisecondsToLocalTimeString(Int64 milliseconds)
+        {
+            DateTime utc = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddMilliseconds(milliseconds);
+            string timezone = Environment.GetEnvironmentVariable("TimeZone");
+            if (timezone == null) timezone = "America/New_York";
+            TimeZoneInfo tzInfo = TimeZoneInfo.FindSystemTimeZoneById(timezone);
+            return TimeZoneInfo.ConvertTimeFromUtc(utc, tzInfo).ToShortTimeString();
+        }
     }
 }

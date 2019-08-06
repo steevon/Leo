@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 
 namespace Leo
 {
@@ -82,10 +83,10 @@ namespace Leo
                 if (alarmMode != null)
                 {
                     string msg = JsonConvert.SerializeObject(fullMessage);
-                    log.LogInformation(msg);
-                    DateTime t = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddMilliseconds(Convert.ToInt64(fullMessage.internalDate));
-                    changedTime = t.ToString();
-                    details = fullMessage.snippet;
+                    changedTime = Leo.MillisecondsToLocalTimeString(Convert.ToInt64(fullMessage.internalDate));
+                    // Extract information from snippet
+                    Match match = Regex.Match(Convert.ToString(fullMessage.snippet), @".*?(Ring\sAlarm\sin\s[A-Za-z]+\schanged\sto\s.*?)Still\shave\squestions\?");
+                    details = match.Groups[1].Value;
                     break;
                 }
             }
