@@ -31,7 +31,7 @@ namespace Leo
             log.LogInformation($"Obtained Access Token: {token.Substring(0, 12)}******");
             try
             {
-                Dictionary<string, string> status = RingStatus(token, log);
+                Dictionary<string, Status> status = RingStatus(token, log);
                 string responseBody = JsonConvert.SerializeObject(status);
                 return new OkObjectResult($"{responseBody}");
             }
@@ -41,23 +41,35 @@ namespace Leo
             }
         }
 
-        private static Dictionary<string, string> RingStatus(string access_token, ILogger log)
+        private static Dictionary<string, Status> RingStatus(string token, ILogger log)
         {
-            Dictionary<string, string> status = new Dictionary<string, string>();
-            string alarmMode = null;
             Dictionary<string, string> query = new Dictionary<string, string>
             {
                 { "q", $"from:no-reply@rs.ring.com" }
             };
-            GmailAPI api = new GmailAPI(access_token, log);
+            GmailAPI api = new GmailAPI(token, log);
             api.Query = query;
+
+            Dictionary<string, Status> status = new Dictionary<string, Status>();
+            status["Alarm"] = AlarmStatus(api, log);
+            
+            return status;
+        }
+
+        private static Status AlarmStatus(GmailAPI api, ILogger log)
+        {
+            string alarmMode = null;
+            string changedTime = null;
+            string details = null;
+            
             List<dynamic> messages = api.ListMessages();
-            foreach(dynamic message in messages)
+            foreach (dynamic message in messages)
             {
                 string messageID = message.id;
-                dynamic headers = api.GetMessage(messageID).payload.headers;
+                dynamic fullMessage = api.GetMessage(messageID);
+                dynamic headers = fullMessage.payload.headers;
                 string subject = null;
-                foreach(dynamic header in headers)
+                foreach (dynamic header in headers)
                 {
                     if (header.name == "Subject")
                     {
@@ -65,18 +77,34 @@ namespace Leo
                         break;
                     }
                 }
-                
+
                 ringAlarm.TryGetValue(subject, out alarmMode);
                 if (alarmMode != null)
                 {
-
+                    string msg = JsonConvert.SerializeObject(fullMessage);
+                    log.LogInformation(msg);
+                    DateTime t = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddMilliseconds(Convert.ToInt64(fullMessage.internalDate));
+                    changedTime = t.ToString();
+                    details = fullMessage.snippet;
                     break;
                 }
             }
-            status["Alarm"] = alarmMode ?? "Unknown";
-            
-            return status;
+            alarmMode = alarmMode ?? "Unknown";
+            return new Status
+            {
+                Mode = alarmMode,
+                Time = changedTime,
+                Details = details
+            };
         }
 
     }
+
+    public class Status
+    {
+        public string Mode { get; set; }
+        public string Time { get; set; }
+        public string Details { get; set; }
+    }
+
 }
