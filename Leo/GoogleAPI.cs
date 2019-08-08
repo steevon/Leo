@@ -10,10 +10,10 @@ namespace Leo
         private string accessToken;
         private ILogger log;
 
-        public GoogleAPI(string accessToken, ILogger log=null)
+        public GoogleAPI(ILogger log, string accessToken)
         {
-            this.accessToken = accessToken;
             this.log = log;
+            this.accessToken = accessToken;
         }
 
         public dynamic Request(string url, Dictionary<string, string> query=null)
@@ -47,7 +47,7 @@ namespace Leo
         private string pageToken = null;
         public Dictionary<string, string> Query { get; set; }
 
-        public GmailAPI(string accessToken, ILogger log = null) : base(accessToken, log)
+        public GmailAPI(ILogger log, string accessToken) : base(log, accessToken)
         {
         }
 

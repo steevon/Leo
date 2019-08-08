@@ -32,7 +32,7 @@ namespace Leo
             log.LogInformation($"Obtained Access Token: {token.Substring(0, 12)}******");
             try
             {
-                Dictionary<string, Status> status = RingStatus(token, log);
+                Dictionary<string, Status> status = RingStatus(log, token);
                 string responseBody = JsonConvert.SerializeObject(status);
                 return new OkObjectResult($"{responseBody}");
             }
@@ -42,13 +42,13 @@ namespace Leo
             }
         }
 
-        private static Dictionary<string, Status> RingStatus(string token, ILogger log)
+        private static Dictionary<string, Status> RingStatus(ILogger log, string token)
         {
             Dictionary<string, string> query = new Dictionary<string, string>
             {
                 { "q", $"from:no-reply@rs.ring.com" }
             };
-            GmailAPI api = new GmailAPI(token, log);
+            GmailAPI api = new GmailAPI(log, token);
             api.Query = query;
 
             Dictionary<string, Status> status = new Dictionary<string, Status>();
