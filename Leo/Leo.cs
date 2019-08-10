@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Net;
 using System.Net.Http;
@@ -173,10 +174,36 @@ namespace Leo
         public static string MillisecondsToLocalTimeString(Int64 milliseconds)
         {
             DateTime utc = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddMilliseconds(milliseconds);
+            DateTime localTime;
             string timezone = Environment.GetEnvironmentVariable("TimeZone");
-            if (timezone == null) timezone = "America/New_York";
-            TimeZoneInfo tzInfo = TimeZoneInfo.FindSystemTimeZoneById(timezone);
-            return TimeZoneInfo.ConvertTimeFromUtc(utc, tzInfo).ToShortTimeString();
+            if (timezone != null)
+            {
+                try
+                {
+                    TimeZoneInfo tzInfo = TimeZoneInfo.FindSystemTimeZoneById(timezone);
+                    localTime = TimeZoneInfo.ConvertTimeFromUtc(utc, tzInfo);
+                }
+                catch (Exception ex)
+                {
+                    if (ex.GetType() == typeof(TimeZoneNotFoundException))
+                    {
+                        string info = ex.Message + "\nAvailable Time Zones:\n";
+                        ReadOnlyCollection<TimeZoneInfo> timeZones = TimeZoneInfo.GetSystemTimeZones();
+                        foreach (TimeZoneInfo timeZone in timeZones)
+                        {
+                            info += $"{timeZone.Id}\n";
+                        }
+                        ex = new TimeZoneNotFoundException(info);
+                    }
+                    throw ex;
+                }
+            }
+            else
+            {
+                localTime = utc;
+            }
+
+            return localTime.ToShortTimeString();
         }
     }
 }
