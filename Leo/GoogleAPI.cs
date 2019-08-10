@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json.Linq;
 
 
 namespace Leo
@@ -8,7 +9,7 @@ namespace Leo
     public class GoogleAPI
     {
         private string accessToken;
-        private ILogger log;
+        protected ILogger log;
 
         public GoogleAPI(ILogger log, string accessToken)
         {
@@ -38,6 +39,15 @@ namespace Leo
                 log.LogError($"{data_response}");
             }
             return data_response;
+        }
+
+        public dynamic PostRequest(string url, dynamic data)
+        {
+            Dictionary<string, string> headers = new Dictionary<string, string>
+            {
+                { "Authorization", $"Bearer {accessToken}" }
+            };
+            return Leo.PostJSONResponse(log, url, data, headers);
         }
 
     }
@@ -87,6 +97,13 @@ namespace Leo
             return response;
         }
 
-
+        public dynamic Watch(string label="INBOX")
+        {
+            string url = "https://www.googleapis.com/gmail/v1/users/me/watch";
+            dynamic data = new JObject();
+            data.topicName = Environment.GetEnvironmentVariable("GooglePubSubTopic");
+            data.labelIds = new JArray(label);
+            return PostRequest(url, data);
+        }
     }
 }

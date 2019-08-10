@@ -104,11 +104,20 @@ namespace Leo
             return JsonConvert.DeserializeObject(responseString);
         }
 
-        public static async Task<dynamic> PostJSONResponse(ILogger log, string url, Dictionary<string, string> data)
+        public static async Task<dynamic> PostJSONResponse(ILogger log, string url, dynamic data, Dictionary<string, string> headers = null)
         {
             HttpClient client = new HttpClient();
-            var content = new FormUrlEncodedContent(data);
-            HttpResponseMessage response = await client.PostAsync(url, content);
+            if (headers != null)
+            {
+                foreach (KeyValuePair<string, string> header in headers)
+                {
+                    client.DefaultRequestHeaders.Add(header.Key, header.Value);
+                }
+                log.LogInformation($"Added headers {client.DefaultRequestHeaders}");
+            }
+            string content = JsonConvert.SerializeObject(data);
+            var task = client.PostAsync(url, new StringContent(content, Encoding.UTF8, "application/json"));
+            HttpResponseMessage response = task.Result;
             var responseString = await response.Content.ReadAsStringAsync();
             return JsonConvert.DeserializeObject(responseString);
         }
