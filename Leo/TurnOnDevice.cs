@@ -84,9 +84,7 @@ namespace Leo
                         break;
                 }
                 // Turn on the device
-                string envVariable = deviceName + "On";
-                string deviceOnUrl = Environment.GetEnvironmentVariable(envVariable);
-                if (deviceOnUrl != null) Leo.GetHttpResponse(log, deviceOnUrl, 3);
+                TurnOnDeviceByHttpRequest(log, deviceName);
                 // Schedule the device to be turned off
                 if (duration > 0)
                 {
@@ -102,6 +100,14 @@ namespace Leo
             // Return bad request if the device parameter is null
             log.LogError("Parameter \"device\" not found on the query string or in the request body.");
             return new BadRequestObjectResult("Please pass a \"device\" parameter on the query string or in the request body.");
+        }
+
+        public static void TurnOnDeviceByHttpRequest(ILogger log, string deviceName)
+        {
+            string envVariable = deviceName + "On";
+            string deviceOnUrl = Environment.GetEnvironmentVariable(envVariable);
+            if (deviceOnUrl != null) Leo.GetHttpResponse(log, deviceOnUrl, 3);
+            else log.LogError($"Trigger for turning on {deviceName} not found.");
         }
 
         /// <summary>

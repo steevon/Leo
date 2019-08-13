@@ -42,7 +42,7 @@ namespace Leo
             }
         }
 
-        private static Dictionary<string, Status> RingStatus(ILogger log, string token)
+        public static Dictionary<string, Status> RingStatus(ILogger log, string token)
         {
             Dictionary<string, string> query = new Dictionary<string, string>
             {
@@ -82,7 +82,7 @@ namespace Leo
                 ringAlarm.TryGetValue(subject, out alarmMode);
                 if (alarmMode != null)
                 {
-                    string msg = JsonConvert.SerializeObject(fullMessage);
+                    //string msg = JsonConvert.SerializeObject(fullMessage);
                     changedTime = Leo.MillisecondsToLocalTimeString(Convert.ToInt64(fullMessage.internalDate));
                     // Extract information from snippet
                     Match match = Regex.Match(Convert.ToString(fullMessage.snippet), @".*?(Ring\sAlarm\sin\s[A-Za-z]+\schanged\sto\s.*?)Still\shave\squestions\?");

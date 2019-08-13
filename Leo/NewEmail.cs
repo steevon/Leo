@@ -7,6 +7,7 @@ using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using System.Collections.Generic;
 
 namespace Leo
 {
@@ -18,14 +19,35 @@ namespace Leo
             ILogger log)
         {
             log.LogInformation("HTTP trigger function processed a New Email request.");
+            string token = await AuthenticateGoogle.RefreshAccessToken(log);
 
             //string name = req.Query["name"];
 
             //string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
             //dynamic data = JsonConvert.DeserializeObject(requestBody);
             //name = name ?? data?.name;
+            try
+            {
+                Dictionary<string, Status> status = HomeStatus.RingStatus(log, token);
+                switch (status["Alarm"].Mode)
+                {
+                    case "Home":
+                        TurnOnDevice.TurnOnDeviceByHttpRequest(log, "OfficeCamera");
+                        break;
+                    case "Away":
+                        TurnOnDevice.TurnOnDeviceByHttpRequest(log, "OfficeCamera");
+                        break;
+                    default:
+                        TurnOffDevice.TurnOffDeviceByHttpRequest(log, "OfficeCamera");
+                        break;
 
-            return (ActionResult)new OkObjectResult($"OK");
+                }
+                return new OkObjectResult($"{status["Alarm"].Mode}");
+            }
+            catch (Exception ex)
+            {
+                return new BadRequestObjectResult($"{ex.Message}");
+            }
         }
     }
 }

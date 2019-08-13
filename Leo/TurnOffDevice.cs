@@ -16,14 +16,19 @@ namespace Leo
             dict.TryGetValue("device", out string deviceName);
             if (deviceName != null)
             {
-                string envVariable = deviceName + "Off";
-                string deviceOffUrl = Environment.GetEnvironmentVariable(envVariable);
-                if (deviceOffUrl != null) Leo.GetHttpResponse(log, deviceOffUrl, 3);
-                else log.LogError($"Trigger for turning off {deviceName} not found.");
+                TurnOffDeviceByHttpRequest(log, deviceName);
             } else
             {
                 log.LogError($"\"device\" parameter not found.");
             }
+        }
+
+        public static void TurnOffDeviceByHttpRequest(ILogger log, string deviceName)
+        {
+            string envVariable = deviceName + "Off";
+            string deviceOffUrl = Environment.GetEnvironmentVariable(envVariable);
+            if (deviceOffUrl != null) Leo.GetHttpResponse(log, deviceOffUrl, 3);
+            else log.LogError($"Trigger for turning off {deviceName} not found.");
         }
     }
 }
