@@ -21,33 +21,35 @@ namespace Leo
             log.LogInformation("HTTP trigger function processed a New Email request.");
             string token = await AuthenticateGoogle.RefreshAccessToken(log);
 
-            //string name = req.Query["name"];
-
-            //string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-            //dynamic data = JsonConvert.DeserializeObject(requestBody);
-            //name = name ?? data?.name;
             try
             {
-                Dictionary<string, Status> status = HomeStatus.RingStatus(log, token);
-                switch (status["Alarm"].Mode)
-                {
-                    case "Home":
-                        TurnOnDevice.TurnOnDeviceByHttpRequest(log, "OfficeCamera");
-                        break;
-                    case "Away":
-                        TurnOnDevice.TurnOnDeviceByHttpRequest(log, "OfficeCamera");
-                        break;
-                    default:
-                        TurnOffDevice.TurnOffDeviceByHttpRequest(log, "OfficeCamera");
-                        break;
-
-                }
-                return new OkObjectResult($"{status["Alarm"].Mode}");
+                Status alarmStatus = ConfigBaseOnRingAlarm(log, token);
+                return new OkObjectResult($"{alarmStatus}");
             }
             catch (Exception ex)
             {
                 return new BadRequestObjectResult($"{ex.Message}");
             }
+        }
+
+        private static Status ConfigBaseOnRingAlarm(ILogger log, string token)
+        {
+            Dictionary<string, Status> status = HomeStatus.RingStatus(log, token);
+            switch (status["Alarm"].Mode)
+            {
+                case "Home":
+                    TurnOnDevice.TurnOnDeviceByHttpRequest(log, "LivingRoomCamera");
+                    break;
+                case "Away":
+                    TurnOnDevice.TurnOnDeviceByHttpRequest(log, "OfficeCamera");
+                    TurnOnDevice.TurnOnDeviceByHttpRequest(log, "LivingRoomCamera");
+                    break;
+                default:
+                    TurnOffDevice.TurnOffDeviceByHttpRequest(log, "OfficeCamera");
+                    TurnOffDevice.TurnOffDeviceByHttpRequest(log, "LivingRoomCamera");
+                    break;
+            }
+            return status["Alarm"];
         }
     }
 }

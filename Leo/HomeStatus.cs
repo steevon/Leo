@@ -98,7 +98,6 @@ namespace Leo
                 Details = details
             };
         }
-
     }
 
     public class Status
