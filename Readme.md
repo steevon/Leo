@@ -1,9 +1,14 @@
 ﻿# Leo
 _Qiu's Home Automation Solution with the Azure Functions_
 
-We can easily do something like "Turn on the porch light when someone is at the front door". However, it is not easy to find a way to turn off the light automatically after a delay (say, after 1 minutes). This Function App starts with providing a solution to turn on the devices for a certain amount of time.
+We can easily do something like "Turn on the porch light when someone is at the front door" with smart home devices. However, it is not easy to find a way to turn off the light automatically after a delay (say, after 1 minutes). This Function App starts with providing a solution to turn on the devices for a certain amount of time.
 
 This App is intended to be used with [IFTTT webhooks](https://ifttt.com/maker_webhooks) to create applets like "Turn on the lights when there is motion at the front door".
+
+## Features
+This Function App compliments the smart home with the following features:
+* [Turn on a device by HTTP trigger, and automatically turn it off after a certain amount of time](docs/TurnOnDevice.md)
+* [Trigger actions base on Ring Alarm System status](docs/Ring.md)
 
 ## Azure Function App Deployment
 This solution uses [Azure Functions](https://azure.microsoft.com/en-us/services/functions/) to run event-driven on-demand functions on the cloud. This solution can be deployed to Azure with a consumption plan using Visual Studio 2019. The free grant for consumption plan should allow well over 1,000 executions per day. The function for turning off devices uses Azure Service Bus, which may incur a small cost (within $0.05 USD per month).
@@ -59,29 +64,3 @@ Here is an example of the file:
 * `FrontDoorLightsOn` and `FrontDoorLightsOff` are URLs for turning device On/Off. Here "FrontDoorLights" is the device name.
 
 See also: [Work with Azure Functions Core Tools](https://docs.microsoft.com/en-us/azure/azure-functions/functions-run-local#local-settings-file)
-
-## Usage
-Once deployed, URL for triggering the "Turn On Device" function can be obtain from Azure Portal (See [Test the function](https://docs.microsoft.com/en-us/azure/azure-functions/functions-create-first-azure-function#test-the-function)).
-
-The URL should look like:
-```
-https://[YOUR_APP_NAME].azurewebsites.net/api/TurnOnDevice?code=[XXXXXXXXXXXXXXXXX]
-```
-
-The function accepts both GET and POST requests, and the following parameters as query string in GET request or JSON body in POST request.
-* device: the name of the device to be turned on, e.g. "FrontDoorLights".
-* duration: the minimum duration in seconds for the device to be turned on.
-* condition: either "day" or "night", indicates whether the device should be turned on during day or night only.
-* sender: an identifier for the trigger. This is for logging purpose only.
-
-The following example assumes:
-* "FrontDoorLights" as device name
-* `FrontDoorLightsOn` and `FrontDoorLightsOff` are configured as environment variables containing the URLs for turing on and off "FrontDoorLights"
-* `HomeCoordinates` is configured as environment variables containing the coordinates of a desired location (e.g. home).
-
-Visiting this URL will turn on "FrontDoorLights" for 1 minutes after sunset:
-```
-https://[YOUR_APP_NAME].azurewebsites.net/api/TurnOnDevice?code=[XXXXXXXXXXXXXXXXX]&device=FrontDoorLights&condition=night&duration=60&sender=[YOUR_NAME]
-```
-
-You can test the function by visiting the link using the web browser on your computer or your phone. Once it is working, you can integrate this with [IFTTT webhooks](https://ifttt.com/maker_webhooks) to build your awesome automation project.
