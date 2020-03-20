@@ -25,6 +25,8 @@ namespace Leo
         /// duration: Optional, specify in seconds. Turn on the device for a certain duration only. Device will be turned of after the duration.
         ///     If duration is specified,
         ///     the URL for turning off the device by HTTP GET request must be stored as an environment variable with the name "[Device Name]Off".
+        /// skip: Optional, when there is any value, skip turning on the device in this function but still schedule to turn off the device.
+        ///     This is useful when you would like to use Device being turned on in IFTTT to trigger this function.
         /// 
         /// </summary>
         /// <param name="req">HTTP Request</param>
@@ -41,6 +43,7 @@ namespace Leo
             string deviceName = req.Query["device"];
             string senderName = req.Query["sender"];
             string condition = req.Query["condition"];
+            string skip = req.Query["skip"];
             // duration will have the value of -1 if it is not specified.
             Int32.TryParse(req.Query["duration"], out int duration);
 
@@ -48,9 +51,10 @@ namespace Leo
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
             dynamic data = JsonConvert.DeserializeObject(requestBody);
             // Get parameters from POST request, if parameter is not valid in GET request.
-            deviceName = deviceName ?? data?.device;
-            senderName = senderName ?? data?.sender;
-            condition = condition ?? data?.condition;
+            deviceName ??= data?.device;
+            senderName ??= data?.sender;
+            condition ??= data?.condition;
+            skip ??= data?.skip;
             // duration will have the value of -1 if it is not specified.
             if (duration == -1)
             {
@@ -58,7 +62,7 @@ namespace Leo
             }
 
             log.LogInformation($"Device: {deviceName}, Sender: {senderName}, Duration: {duration}");
-            string responseMessage;
+            string responseMessage = "";
 
             if (deviceName != null)
             {
@@ -83,16 +87,22 @@ namespace Leo
                         }
                         break;
                 }
-                // Turn on the device
-                TurnOnDeviceByHttpRequest(log, deviceName);
+
+                // Turn on the device only if skip is null (not found in the parameters).
+                if (skip == null)
+                {
+                    // Turn on the device
+                    TurnOnDeviceByHttpRequest(log, deviceName);
+                    responseMessage += $"Turned on {deviceName}. ";
+                }
+
                 // Schedule the device to be turned off
                 if (duration > 0)
                 {
                     await ScheduleOff(log, senderName, deviceName, duration);
-                    
+                    responseMessage += $"Scheduled {deviceName} to be turned off in {duration} seconds.";
                 }
                 // Return Response
-                responseMessage = $"Turned on {deviceName}";
                 log.LogInformation(responseMessage);
                 return new OkObjectResult(responseMessage);
             }
