@@ -1,14 +1,11 @@
 using System;
-using System.IO;
 using System.Threading.Tasks;
-using System.Web;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using System.Net.Http;
 using System.Collections.Generic;
 
 namespace Leo
@@ -25,7 +22,7 @@ namespace Leo
 
             string code = req.Query["code"];
             string scope = req.Query["scope"];
-            string redirect = String.IsNullOrEmpty(req.Query["redirect"].ToString()) ? "http://localhost:7071/api/AuthenticateGoogle" : req.Query["redirect"].ToString();
+            string redirect = string.IsNullOrEmpty(req.Query["redirect"].ToString()) ? "https://qiu-leo.azurewebsites.net/api/AuthenticateGoogle" : req.Query["redirect"].ToString();
             
             string clientID = Environment.GetEnvironmentVariable("GoogleClientID");
             string clientSecret = Environment.GetEnvironmentVariable("GoogleClientSecret");
