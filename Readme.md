@@ -7,33 +7,41 @@ This solution uses [Azure Functions](https://azure.microsoft.com/en-us/services/
 
 ![Basic Workflow](docs/pictures/basic_workflow.png)
 
-## IFTTT
+## Working with IFTTT
 Not every smart home device has the ability to send/receive HTTP requests. However, most devices are able to connect with IFTTT service, which can be a bridge between the device and HTTP requests.
 
-In IFTTT, we can connect the devices with [IFTTT webhooks](https://ifttt.com/maker_webhooks), which enable us to create applets like:
+In IFTTT, we can connect devices with [Webhooks](https://ifttt.com/maker_webhooks), which enable us to create applets like:
 * Send an HTTP request when an event (e.g. there is motion) is triggered.
 * Trigger an action (e.g. turn off the light) when an HTTP request is received.
 
-![Basic Workflow](docs/pictures/IFTTT_workflow.png)
+The project is designed to work with IFTTT to create automated workflow:
 
-## Features
-Once deployed, the available functions will show up in the Azure Portal. This Function App compliments the smart home with the following features:
+![Workflow with IFTTT](docs/pictures/IFTTT_workflow.png)
+
+Azure function is also able to send out multiple requests with some pre-defined rules (e.g. one without delay and another with a 5-minute delay). This project includes Azure functions to automate tasks based on different rules. For example, with the [TurnOnDevice](docs/TurnOnDevice.md) function, we can turn on the lights when motion is detected by a motion sensor, and turn the lights off after 5 minutes:
+
+![Workflow: Turn on lights for 5 minutes](docs/pictures/TurnOnLights.png)
+
+## Functions
+Once deployed, the available functions will show up in the Azure Portal. This App compliments the smart home with the following functions(features):
 * [Turn on a device for a certain amount of time](docs/TurnOnDevice.md)
 * [Trigger actions base on Ring Alarm System status](docs/Ring.md)
 
-In addition, the App provides the following helper functions:
+In addition, this App includes the following helper functions:
 * Obtain Google OAuth access token and refresh token.
 * Watch Gmail for new messages.
 
 ## Deployment
-This solution can be deployed to Azure with a consumption plan using Visual Studio 2019. The free grant for consumption plan should allow well over 1,000 executions per day. The function for turning off devices uses Azure Service Bus, which may incur a small cost (usually within $0.05 USD per month).
+This project was tested with Azure Function App 2.0 and Microsoft.NET Core 3.1.0.
+
+The functions can be deployed to Azure with a consumption plan using Visual Studio 2019. The free grant for consumption plan should allow well over 1,000 executions per day. The function for turning off devices uses Azure Service Bus, which may incur a small cost (usually within $0.05 USD per month).
 
 For more details, see [deployment.md](docs/Deployment.md).
 
 ## Usage
-Once deployed, URL for triggering the functions can be obtain from the Azure Portal (See [Test the function](https://docs.microsoft.com/en-us/azure/azure-functions/functions-create-first-azure-function#test-the-function)). Each feature described above can be triggered by hitting the URL of a particular function, identified by the "Function Name".
+Once deployed, URL for triggering the functions can be obtained from the Azure Portal (See [Test the function](https://docs.microsoft.com/en-us/azure/azure-functions/functions-create-first-azure-function#test-the-function)). Each feature described above can be triggered by hitting the URL of a particular function, identified by the "FUNCTION_NAME".
 
-The URL should look like:
+The URL will look like:
 ```
 https://[YOUR_APP_NAME].azurewebsites.net/api/[FUNCTION_NAME]?code=[XXXXXXXXXXXXXXXXX]
 ```
