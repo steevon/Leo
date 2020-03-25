@@ -19,6 +19,7 @@ namespace Leo
 
         public dynamic Request(string url, Dictionary<string, string> query=null)
         {
+            log.LogInformation($"Access Token: {accessToken}");
             Dictionary<string, string> headers = new Dictionary<string, string>
             {
                 { "Authorization", $"Bearer {accessToken}" }

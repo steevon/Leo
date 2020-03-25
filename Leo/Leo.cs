@@ -47,7 +47,7 @@ namespace Leo
             HttpWebResponse httpResponse = null;
             do
             {
-                // Wait 200ms before retry.
+                // Wait before retry.
                 if (count > 0)
                 {
                     System.Threading.Thread.Sleep(500 * count);
@@ -61,7 +61,8 @@ namespace Leo
                     {
                         request.Headers.Add(header.Key, header.Value);
                     }
-                    log.LogInformation($"Added headers {request.Headers.Keys}");
+                    log.LogInformation($"Headers: {request.Headers.AllKeys.ToString()}");
+                    log.LogInformation($"Bearer: {request.Headers.Get("Authorization")}");
                 }
                 try
                 {

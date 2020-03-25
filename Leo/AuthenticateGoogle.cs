@@ -70,9 +70,8 @@ namespace Leo
                 { "grant_type", "refresh_token" }
             };
             dynamic token_response = await Leo.PostJSONResponse(log, "https://www.googleapis.com/oauth2/v4/token", data);
-            dynamic result = token_response.Result;
             log.LogInformation((string)JsonConvert.SerializeObject(token_response));
-            return result?.access_token;
+            return token_response?.access_token;
         }
     }
 }
