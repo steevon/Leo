@@ -112,6 +112,11 @@ namespace Leo
             return new BadRequestObjectResult("Please pass a \"device\" parameter on the query string or in the request body.");
         }
 
+        /// <summary>
+        /// Sends a HTTP GET request to turn on a device.
+        /// </summary>
+        /// <param name="log">Logger</param>
+        /// <param name="deviceName">The name of the device, corresponding to the environment variable defined in settings.</param>
         public static void TurnOnDeviceByHttpRequest(ILogger log, string deviceName)
         {
             string envVariable = deviceName + "On";
@@ -124,10 +129,10 @@ namespace Leo
         /// Schedules turning off a device by sending a message to the service bus queue.
         /// 
         /// </summary>
-        /// <param name="log"></param>
-        /// <param name="senderName"></param>
-        /// <param name="deviceName"></param>
-        /// <param name="seconds"></param>
+        /// <param name="log">Logger</param>
+        /// <param name="senderName">Sender of the request, for logging purpose.</param>
+        /// <param name="deviceName">The name of the device, corresponding to the environment variable defined in settings.</param>
+        /// <param name="seconds">The number of seconds to wait before turning off the device.</param>
         /// <returns></returns>
         public static async Task ScheduleOff(ILogger log, string senderName, string deviceName, int seconds)
         {

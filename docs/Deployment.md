@@ -1,4 +1,4 @@
-# Azure Function App Deployment
+# Deploy Leo as Azure Function App
 This solution uses [Azure Functions](https://azure.microsoft.com/en-us/services/functions/) to run event-driven on-demand functions on the cloud. This solution can be deployed to Azure with a consumption plan using Visual Studio 2019. The free grant for consumption plan should allow well over 1,000 executions per day. The function for turning off devices uses Azure Service Bus, which may incur a small cost (usually within $0.05 USD per month).
 
 Deployment includes the following steps:
@@ -10,6 +10,8 @@ See also: [Develop Azure Functions using Visual Studio](https://docs.microsoft.c
 
 ## Azure Service Bus
 A [Service Bus](https://docs.microsoft.com/en-us/azure/service-bus-messaging/) queue is used to keep messages for turning devices off. Azure Service Bus provides an option to schedule the enqueue time of a message. This feature is used in this app to schedule the devices to be turned off. This function app uses a queue named "turn-off-device". The name is hard coded in a constant variable named `turnOffDeviceQueueName` in `Leo.cs`. A queue with this name must be created in the Service Bus before running the function app.
+
+Once the service bus is created, the `ServiceBusConnectionString` should be set as an environment variable. This string can be obtained in the "Settings - Shared access policies" of the service bus.
 
 See also: [Use Azure portal to create a Service Bus queue](https://docs.microsoft.com/en-us/azure/service-bus-messaging/service-bus-quickstart-portal)
 
