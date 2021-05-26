@@ -1,43 +1,39 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/azure/functions-action
-# More GitHub Actions for Azure: https://github.com/Azure/actions
+# Docs for the Azure Web Apps Deploy action: https://go.microsoft.com/fwlink/?linkid=2134798
+# More GitHub Actions for Azure: https://go.microsoft.com/fwlink/?linkid=2135048
 
-name: Build and deploy dotnet core app to Azure Function App - ifttdelay
+name: Azure App Service - ifttdelay(Production), Build and deploy DotnetCore app
 
 on:
   push:
     branches:
       - master
-  workflow_dispatch:
-
-env:
-  AZURE_FUNCTIONAPP_PACKAGE_PATH: '.' # set this to the path to your web app project, defaults to the repository root
-  DOTNET_VERSION: '3.1.301'  # set this to the dotnet version to use
 
 jobs:
   build-and-deploy:
     runs-on: windows-latest
-    steps:
-    - name: 'Checkout GitHub Action'
-      uses: actions/checkout@v2
 
-    - name: Setup DotNet ${{ env.DOTNET_VERSION }} Environment
+    steps:
+    # checkout the repo
+    - name: 'Checkout Github Action'
+      uses: actions/checkout@master
+
+
+    - name: Set up .NET Core
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: ${{ env.DOTNET_VERSION }}
+        dotnet-version: '3.1.301'
 
-    - name: 'Resolve Project Dependencies Using Dotnet'
-      shell: pwsh
-      run: |
-        pushd './${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}'
-        dotnet build --configuration Release --output ./output
-        popd
+    - name: Build with dotnet
+      run: dotnet build --configuration Release
 
-    - name: 'Run Azure Functions Action'
-      uses: Azure/functions-action@v1
-      id: fa
+    - name: dotnet publish
+      run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/myapp
+
+    - name: Run Azure webapp deploy action using publish profile credentials
+      uses: azure/webapps-deploy@v2
       with:
-        app-name: 'ifttdelay'
-        slot-name: 'production'
-        package: '${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/output'
-        publish-profile: ${{ secrets.AzureAppService_PublishProfile_3ce9a60d73424750ad568dbee8dc3a53 }}
-  
+        app-name: ifttdelay
+        slot-name: Production
+        publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_1EF1435A71E64E7F914799490E2EEF4A }}
+        package: ${{env.DOTNET_ROOT}}/myapp
+
